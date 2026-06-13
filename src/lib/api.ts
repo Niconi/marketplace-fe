@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const TOKEN_KEY = "mp_admin_token";
 
@@ -28,7 +28,7 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 
 export async function api<T>(
   path: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<T> {
   const { body, auth, isFormData, headers, ...rest } = options;
 
@@ -65,9 +65,7 @@ export async function api<T>(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    const error = new Error(
-      data?.message || "Terjadi kesalahan"
-    ) as ApiError;
+    const error = new Error(data?.message || "Terjadi kesalahan") as ApiError;
     error.status = res.status;
     error.errors = data?.errors;
     throw error;

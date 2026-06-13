@@ -28,8 +28,9 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <footer className="border-t bg-white">
             <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
-              <span>© {new Date().getFullYear()} Tokoku. Demo marketplace.</span>
-              <span>Dibuat dengan Next.js + Laravel</span>
+              <span>
+                © {new Date().getFullYear()} Tokoku. Demo marketplace.
+              </span>
             </div>
           </footer>
           <Toaster richColors position="top-center" />

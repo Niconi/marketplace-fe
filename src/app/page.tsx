@@ -1,65 +1,158 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState, useCallback } from "react";
+import { Search } from "lucide-react";
+import { api } from "@/lib/api";
+import { Category, Product, Paginated } from "@/lib/types";
+import { ProductCard } from "@/components/product-card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export default function HomePage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [sort, setSort] = useState<string>("latest");
+
+  useEffect(() => {
+    api<{ data: Category[] }>("/categories")
+      .then((res) => setCategories(res.data))
+      .catch(() => {});
+  }, []);
+
+  const loadProducts = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ per_page: "24", sort });
+    if (search) params.set("search", search);
+    if (activeCategory !== "all") params.set("category", activeCategory);
+    try {
+      const res = await api<Paginated<Product>>(`/products?${params}`);
+      setProducts(res.data);
+    } catch {
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [search, activeCategory, sort]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      {/* Hero */}
+      <div className="mb-8 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-10 text-white sm:px-10">
+        <h1 className="text-2xl font-bold sm:text-3xl">
+          Belanja gampang, tanpa ribet daftar
+        </h1>
+        <p className="mt-2 max-w-lg text-indigo-100">
+          Pilih produk, masukkan keranjang, checkout sebagai tamu, lalu bayar
+          via QR. Selesai!
+        </p>
+      </div>
+
+      {/* Search + sort */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSearch(searchInput);
+        }}
+        className="mb-4 flex flex-col gap-3 sm:flex-row"
+      >
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Cari produk..."
+            className="pl-9 bg-white"
+          />
+        </div>
+        <Button type="submit">Cari</Button>
+        <Select value={sort} onValueChange={(v) => setSort(v ?? "latest")}>
+          <SelectTrigger className="w-full bg-white sm:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="latest">Terbaru</SelectItem>
+            <SelectItem value="price_asc">Harga Terendah</SelectItem>
+            <SelectItem value="price_desc">Harga Tertinggi</SelectItem>
+            <SelectItem value="name">Nama (A-Z)</SelectItem>
+          </SelectContent>
+        </Select>
+      </form>
+
+      {/* Category chips */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <CategoryChip
+          label="Semua"
+          active={activeCategory === "all"}
+          onClick={() => setActiveCategory("all")}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        {categories.map((c) => (
+          <CategoryChip
+            key={c.id}
+            label={c.name}
+            active={activeCategory === c.slug}
+            onClick={() => setActiveCategory(c.slug)}
+          />
+        ))}
+      </div>
+
+      {/* Products grid */}
+      {loading ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-72 rounded-xl" />
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      ) : products.length === 0 ? (
+        <div className="py-20 text-center text-slate-500">
+          Tidak ada produk ditemukan.
         </div>
-      </main>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function CategoryChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+        active
+          ? "border-indigo-600 bg-indigo-600 text-white"
+          : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

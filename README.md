@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tokoku — Frontend (Next.js)
 
-## Getting Started
+Antarmuka marketplace sederhana: katalog produk, keranjang, guest checkout,
+pembayaran QR (simulasi), lacak pesanan, dan admin panel. Terhubung ke API
+Laravel di repo `marketplace-be`.
 
-First, run the development server:
+## Teknologi
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4 + shadcn/ui
+- qrcode.react (QR pembayaran)
+
+## Setup
+
+```bash
+npm install
+```
+
+Buat `.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+```
+
+Jalankan (port 3100, sudah diatur di `package.json`):
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka http://localhost:3100. Pastikan backend (`marketplace-be`) jalan di port 8080.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Halaman
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Pembeli (guest)
+| Route | Fungsi |
+|-------|--------|
+| `/` | Katalog: search, filter kategori, sort |
+| `/products/[slug]` | Detail produk + tambah ke keranjang |
+| `/cart` | Keranjang belanja |
+| `/checkout` | Form data penerima (guest) |
+| `/payment/[orderNumber]` | QR pembayaran + simulasi auto-lunas |
+| `/orders/track` | Cari pesanan via nomor |
+| `/orders/[orderNumber]` | Status & detail pesanan |
 
-## Learn More
+### Admin
+| Route | Fungsi |
+|-------|--------|
+| `/admin/login` | Login admin |
+| `/admin` | Dashboard statistik |
+| `/admin/products` | CRUD produk + upload gambar |
+| `/admin/categories` | CRUD kategori |
+| `/admin/orders` | Lihat & ubah status pesanan |
 
-To learn more about Next.js, take a look at the following resources:
+Login admin demo: `admin@marketplace.test` / `password`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Alur Pengguna
+1. Buka katalog → cari/filter produk.
+2. Tambah produk ke keranjang (disimpan di `localStorage`).
+3. Checkout sebagai tamu (isi nama, email, telp, alamat).
+4. Sistem buat pesanan & arahkan ke halaman QR.
+5. Scan QR / klik "Saya Sudah Bayar" → pembayaran terkonfirmasi (simulasi).
+6. Lacak status kapan saja via nomor pesanan.

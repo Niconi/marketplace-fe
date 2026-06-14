@@ -1,17 +1,35 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sans = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    "-apple-system",
+    "Segoe UI",
+    "Roboto",
+    "Helvetica Neue",
+    "Arial",
+    "sans-serif",
+  ],
+});
+
+const mono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
 
 export const metadata: Metadata = {
-  title: "Tokoku — Marketplace Sederhana",
+  title: "Tokoku",
   description: "Belanja mudah, checkout cepat tanpa perlu daftar akun.",
 };
 
@@ -21,15 +39,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-slate-50">
+    <html
+      lang="id"
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
+    >
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-slate-50 selection:bg-indigo-600/15 selection:text-indigo-700"
+      >
         <CartProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
           <footer className="border-t bg-white">
             <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
               <span>
-                © {new Date().getFullYear()} Tokoku. Demo marketplace.
+                © {new Date().getFullYear()} Tokoku. All rights reserved.
               </span>
             </div>
           </footer>

@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const [submitting, setSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   const [form, setForm] = useState({
@@ -30,13 +31,14 @@ export default function CheckoutPage() {
     notes: "",
   });
 
-  // Redirect away if cart is empty (e.g. after refresh)
+  // Redirect away if cart is empty (e.g. after refresh), but not while we are
+  // navigating to the payment page after a successful order.
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !orderPlaced) {
       const t = setTimeout(() => router.replace("/cart"), 50);
       return () => clearTimeout(t);
     }
-  }, [items.length, router]);
+  }, [items.length, orderPlaced, router]);
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -57,6 +59,7 @@ export default function CheckoutPage() {
           })),
         },
       });
+      setOrderPlaced(true);
       clearCart();
       toast.success("Pesanan dibuat! Lanjut ke pembayaran.");
       router.push(`/payment/${res.data.order_number}`);
@@ -72,7 +75,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center text-slate-500">
-        Keranjang kosong, mengalihkan...
+        {orderPlaced ? "Membuka pembayaran..." : "Keranjang kosong, mengalihkan..."}
       </div>
     );
   }
@@ -91,6 +94,7 @@ export default function CheckoutPage() {
               value={form.customer_name}
               onChange={(e) => update("customer_name", e.target.value)}
               placeholder="Nama kamu"
+              className="h-12 px-4"
               required
             />
           </Field>
@@ -102,6 +106,7 @@ export default function CheckoutPage() {
                 value={form.customer_email}
                 onChange={(e) => update("customer_email", e.target.value)}
                 placeholder="email@contoh.com"
+                className="h-12 px-4"
                 required
               />
             </Field>
@@ -110,6 +115,7 @@ export default function CheckoutPage() {
                 value={form.customer_phone}
                 onChange={(e) => update("customer_phone", e.target.value)}
                 placeholder="08xxxxxxxxxx"
+                className="h-12 px-4"
                 required
               />
             </Field>
@@ -120,7 +126,8 @@ export default function CheckoutPage() {
               value={form.shipping_address}
               onChange={(e) => update("shipping_address", e.target.value)}
               placeholder="Jalan, no rumah, kelurahan, kota, kode pos"
-              rows={3}
+              className="px-4 py-3"
+              rows={4}
               required
             />
           </Field>
@@ -130,7 +137,8 @@ export default function CheckoutPage() {
               value={form.notes}
               onChange={(e) => update("notes", e.target.value)}
               placeholder="Catatan untuk penjual"
-              rows={2}
+              className="px-4 py-3"
+              rows={3}
             />
           </Field>
         </div>

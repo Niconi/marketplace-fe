@@ -6,7 +6,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { Order } from "@/lib/types";
 import { formatRupiah } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [countdown, setCountdown] = useState(AUTO_PAY_SECONDS);
+  const [autoTried, setAutoTried] = useState(false);
 
   const isPaid = order?.payment_status === "paid";
 
@@ -47,23 +48,27 @@ export default function PaymentPage() {
       });
       setOrder(res.data);
       toast.success("Pembayaran berhasil!");
-    } catch {
-      toast.error("Gagal memproses pembayaran");
+    } catch (err) {
+      const apiErr = err as ApiError;
+      toast.error(apiErr.message || "Gagal memproses pembayaran");
     } finally {
       setPaying(false);
     }
   }, [orderNumber, paying]);
 
-  // Auto-simulate payment countdown
+  // Auto-simulate payment countdown (fires the auto-pay attempt only once)
   useEffect(() => {
     if (loading || isPaid) return;
     if (countdown <= 0) {
-      pay();
+      if (!autoTried) {
+        setAutoTried(true);
+        pay();
+      }
       return;
     }
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [countdown, loading, isPaid, pay]);
+  }, [countdown, loading, isPaid, pay, autoTried]);
 
   if (loading) {
     return (

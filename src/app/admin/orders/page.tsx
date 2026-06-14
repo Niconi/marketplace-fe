@@ -109,8 +109,8 @@ export default function AdminOrdersPage() {
               <tr>
                 <th className="px-4 py-3">No. Pesanan</th>
                 <th className="px-4 py-3">Pelanggan</th>
-                <th className="px-4 py-3 text-right">Total</th>
-                <th className="px-4 py-3 text-center">Bayar</th>
+                <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Bayar</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 text-right">Aksi</th>
               </tr>
@@ -130,10 +130,10 @@ export default function AdminOrdersPage() {
                       {o.customer_phone}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right font-medium">
+                  <td className="px-4 py-3 font-medium">
                     {formatRupiah(o.total)}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3">
                     <PaymentStatusBadge status={o.payment_status} />
                   </td>
                   <td className="px-4 py-3">

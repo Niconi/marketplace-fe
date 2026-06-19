@@ -1,26 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShoppingCart, Minus, Plus, ArrowLeft, Check } from "lucide-react";
+import { ShoppingCart, Minus, Plus, ArrowLeft, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { Product } from "@/lib/types";
+import { Product, Review, Paginated } from "@/lib/types";
 import { formatRupiah } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StarRating } from "@/components/star-rating";
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -29,6 +35,32 @@ export default function ProductDetailPage() {
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const loadReviews = useCallback(async (productId: number) => {
+    try {
+      const res = await api<Paginated<Review>>(`/products/${productId}/reviews`);
+      setReviews(res.data);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (product) loadReviews(product.id);
+  }, [product, loadReviews]);
+
+  async function deleteReview(reviewId: number) {
+    try {
+      await api(`/reviews/${reviewId}`, {
+        method: "DELETE",
+        customerAuth: true,
+      });
+      toast.success("Ulasan berhasil dihapus");
+      if (product) loadReviews(product.id);
+    } catch {
+      toast.error("Gagal menghapus ulasan");
+    }
+  }
 
   if (loading) {
     return (
@@ -60,13 +92,13 @@ export default function ProductDetailPage() {
     <div className="mx-auto max-w-5xl px-4 py-6">
       <button
         onClick={() => router.back()}
-        className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> Kembali
       </button>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-xl border bg-white">
+        <div className="aspect-square overflow-hidden rounded-xl border bg-card">
           {product.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -75,7 +107,7 @@ export default function ProductDetailPage() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-7xl font-bold text-slate-200">
+            <div className="flex h-full items-center justify-center text-7xl font-bold text-muted-foreground/30">
               {product.name.charAt(0)}
             </div>
           )}
@@ -87,26 +119,34 @@ export default function ProductDetailPage() {
               {product.category.name}
             </Badge>
           )}
-          <h1 className="text-2xl font-bold text-slate-900">{product.name}</h1>
+          <h1 className="text-2xl font-bold">{product.name}</h1>
+          {product.avg_rating != null && product.reviews_count > 0 && (
+            <div className="mt-2 flex items-center gap-2">
+              <StarRating rating={Number(product.avg_rating)} size={18} />
+              <span className="text-sm text-muted-foreground">
+                {Number(product.avg_rating).toFixed(1)} ({product.reviews_count} ulasan)
+              </span>
+            </div>
+          )}
           <p className="mt-3 text-3xl font-bold text-indigo-600">
             {formatRupiah(product.price)}
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Stok tersedia: <span className="font-medium">{product.stock}</span>
           </p>
 
           {product.description && (
-            <p className="mt-5 whitespace-pre-line text-slate-600 leading-relaxed">
+            <p className="mt-5 whitespace-pre-line text-muted-foreground leading-relaxed">
               {product.description}
             </p>
           )}
 
           {!outOfStock && (
             <div className="mt-6 flex items-center gap-3">
-              <span className="text-sm text-slate-600">Jumlah</span>
-              <div className="flex items-center rounded-md border bg-white">
+              <span className="text-sm text-muted-foreground">Jumlah</span>
+              <div className="flex items-center rounded-md border bg-card">
                 <button
-                  className="px-3 py-2 text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                  className="px-3 py-2 text-muted-foreground hover:bg-accent disabled:opacity-40"
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
                   disabled={qty <= 1}
                 >
@@ -114,7 +154,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="w-10 text-center font-medium">{qty}</span>
                 <button
-                  className="px-3 py-2 text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                  className="px-3 py-2 text-muted-foreground hover:bg-accent disabled:opacity-40"
                   onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
                   disabled={qty >= product.stock}
                 >
@@ -152,6 +192,56 @@ export default function ProductDetailPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-12 border-t pt-8">
+        <h2 className="mb-6 text-xl font-bold">Ulasan Produk</h2>
+
+        <div className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground">
+          Sudah berbelanja produk ini?{" "}
+          <Link href="/orders" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Beri ulasan di Pesanan Saya
+          </Link>
+        </div>
+
+        {/* Review List */}
+        {reviews.length === 0 ? (
+          <p className="py-8 text-center text-muted-foreground">
+            Belum ada ulasan untuk produk ini.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review.id} className="rounded-xl border bg-card p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold">{review.user.name}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <StarRating rating={review.rating} size={14} />
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(review.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  {user && user.id === review.user_id && (
+                    <button
+                      onClick={() => deleteReview(review.id)}
+                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                {review.comment && (
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                    {review.comment}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

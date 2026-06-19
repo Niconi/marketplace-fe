@@ -99,7 +99,7 @@ export default function HomePage() {
 
           {/* floating product tiles */}
           <div className="relative hidden h-52 w-72 shrink-0 lg:block">
-            <div className="absolute right-4 top-0 flex h-28 w-44 rotate-[-6deg] flex-col justify-between rounded-2xl bg-white/95 p-4 shadow-2xl shadow-black/20">
+            <div className="absolute right-4 top-0 flex h-28 w-44 rotate-[-6deg] flex-col justify-between rounded-2xl bg-card/95 p-4 shadow-2xl shadow-black/20">
               <span className="text-3xl">🎧</span>
               <div>
                 <div className="h-2 w-20 rounded bg-slate-200" />
@@ -108,7 +108,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="absolute bottom-2 right-24 flex h-28 w-40 rotate-[5deg] flex-col justify-between rounded-2xl bg-white/95 p-4 shadow-2xl shadow-black/20">
+            <div className="absolute bottom-2 right-24 flex h-28 w-40 rotate-[5deg] flex-col justify-between rounded-2xl bg-card/95 p-4 shadow-2xl shadow-black/20">
               <span className="text-3xl">👟</span>
               <div>
                 <div className="h-2 w-16 rounded bg-slate-200" />
@@ -130,12 +130,12 @@ export default function HomePage() {
         className="mb-5 flex flex-col gap-3 sm:flex-row"
       >
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Cari produk..."
-            className="h-11 rounded-xl bg-white pl-10 shadow-sm"
+            className="h-11 rounded-xl bg-card pl-10 shadow-sm"
           />
         </div>
         <Button type="submit" size="lg" className="h-11 px-6">
@@ -185,7 +185,7 @@ export default function HomePage() {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="py-20 text-center text-slate-500">
+        <div className="py-20 text-center text-muted-foreground">
           Tidak ada produk ditemukan.
         </div>
       ) : (
@@ -214,7 +214,7 @@ function CategoryChip({
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-95 ${
         active
           ? "border-indigo-600 bg-indigo-600 text-white shadow-sm shadow-indigo-500/30"
-          : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+          : "border-border bg-card text-muted-foreground hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
       }`}
     >
       {label}

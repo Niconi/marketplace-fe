@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -41,24 +43,29 @@ export default function RootLayout({
   return (
     <html
       lang="id"
+      suppressHydrationWarning
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col bg-slate-50 selection:bg-indigo-600/15 selection:text-indigo-700"
+        className="min-h-full flex flex-col selection:bg-indigo-600/15 selection:text-indigo-700"
       >
-        <CartProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t bg-white">
-            <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
-              <span>
-                © {new Date().getFullYear()} Tokoku. All rights reserved.
-              </span>
-            </div>
-          </footer>
-          <Toaster richColors position="top-center" />
-        </CartProvider>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <footer className="border-t bg-card">
+              <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
+                <span>
+                  © {new Date().getFullYear()} Tokoku. All rights reserved.
+                </span>
+              </div>
+            </footer>
+            <Toaster richColors position="top-center" />
+          </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

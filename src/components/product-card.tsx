@@ -7,6 +7,7 @@ import { Product } from "@/lib/types";
 import { formatRupiah } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/star-rating";
 
 const categoryColors: Record<string, string> = {
   elektronik: "bg-blue-50 text-blue-600",
@@ -36,7 +37,7 @@ function getCategoryColor(slug: string, name?: string): string {
     const found = Object.keys(categoryColors).find((k) => normName.includes(k) || k.includes(normName));
     if (found) return categoryColors[found];
   }
-  return "bg-slate-100 text-slate-500";
+  return "bg-muted text-muted-foreground";
 }
 
 export function ProductCard({ product }: { product: Product }) {
@@ -44,9 +45,9 @@ export function ProductCard({ product }: { product: Product }) {
   const outOfStock = product.stock <= 0;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:shadow-none dark:ring-1 dark:ring-white/8 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:ring-white/15">
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
+        <div className="relative aspect-square w-full overflow-hidden bg-muted">
           {product.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -55,12 +56,12 @@ export function ProductCard({ product }: { product: Product }) {
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-5xl font-bold text-slate-300">
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted to-muted text-5xl font-bold text-muted-foreground">
               {product.name.charAt(0)}
             </div>
           )}
           {outOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
               <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-semibold text-white">
                 Stok Habis
               </span>
@@ -78,16 +79,24 @@ export function ProductCard({ product }: { product: Product }) {
             {product.category.name}
           </Badge>
         )}
+        {product.avg_rating != null && product.reviews_count > 0 && (
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <StarRating rating={Number(product.avg_rating)} size={13} />
+            <span className="text-xs text-muted-foreground">
+              ({product.reviews_count})
+            </span>
+          </div>
+        )}
         <Link href={`/products/${product.slug}`}>
-          <h3 className="line-clamp-2 text-sm font-semibold text-slate-800 transition-colors group-hover:text-indigo-600">
+          <h3 className="line-clamp-2 text-sm font-semibold text-foreground transition-colors group-hover:text-indigo-600">
             {product.name}
           </h3>
         </Link>
         <div className="mt-2 flex-1" />
-        <p className="text-lg font-bold tracking-tight text-slate-900">
+        <p className="text-lg font-bold tracking-tight text-foreground">
           {formatRupiah(product.price)}
         </p>
-        <p className="mb-3 text-xs text-slate-400">Stok: {product.stock}</p>
+        <p className="mb-3 text-xs text-muted-foreground">Stok: {product.stock}</p>
         <button
           disabled={outOfStock}
           onClick={() => {

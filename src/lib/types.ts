@@ -1,3 +1,10 @@
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -17,6 +24,9 @@ export interface Product {
   image: string | null;
   image_url: string | null;
   is_active: boolean;
+  avg_rating: number | null;
+  reviews_count: number;
+  reviews?: Review[];
 }
 
 export interface OrderItem {
@@ -26,14 +36,26 @@ export interface OrderItem {
   price: number;
   quantity: number;
   subtotal: number;
+  product?: { id: number; slug: string; image_url: string | null } | null;
 }
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "paid";
 
+export interface Review {
+  id: number;
+  user_id: number;
+  product_id: number;
+  rating: number;
+  comment: string | null;
+  user: { id: number; name: string };
+  created_at: string;
+}
+
 export interface Order {
   id: number;
   order_number: string;
+  user_id?: number | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -56,4 +78,5 @@ export interface Paginated<T> {
   last_page: number;
   total: number;
   per_page: number;
+  reviewed_product_ids?: number[];
 }

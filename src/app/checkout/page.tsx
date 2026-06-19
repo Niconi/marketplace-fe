@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, getCustomerToken } from "@/lib/api";
 import { Order } from "@/lib/types";
 import { formatRupiah } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ const SHIPPING_COST = 15000;
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -30,6 +32,17 @@ export default function CheckoutPage() {
     shipping_address: "",
     notes: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setForm((f) => ({
+        ...f,
+        customer_name: f.customer_name || user.name,
+        customer_email: f.customer_email || user.email,
+        customer_phone: f.customer_phone || (user.phone ?? ""),
+      }));
+    }
+  }, [user]);
 
   // Redirect away if cart is empty (e.g. after refresh), but not while we are
   // navigating to the payment page after a successful order.
@@ -51,6 +64,7 @@ export default function CheckoutPage() {
     try {
       const res = await api<{ data: Order }>("/orders", {
         method: "POST",
+        customerAuth: !!getCustomerToken(),
         body: {
           ...form,
           items: items.map((i) => ({
@@ -86,7 +100,7 @@ export default function CheckoutPage() {
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
         {/* Shipping details */}
-        <div className="space-y-4 rounded-xl border bg-white p-5 lg:col-span-2">
+        <div className="space-y-4 rounded-xl border bg-card p-5 lg:col-span-2">
           <h2 className="font-semibold">Data Penerima</h2>
 
           <Field label="Nama Lengkap" error={errors.customer_name}>
@@ -144,7 +158,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Order summary */}
-        <div className="h-fit rounded-xl border bg-white p-5">
+        <div className="h-fit rounded-xl border bg-card p-5">
           <h2 className="mb-4 font-semibold">Pesananmu</h2>
           <div className="space-y-3 text-sm">
             {items.map((i) => (
